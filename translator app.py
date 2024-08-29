@@ -1,3 +1,5 @@
+# Import required libraries
+import speech_recognition as sr
 from tkinter import *
 from tkinter import ttk, messagebox
 import pyperclip
@@ -15,8 +17,19 @@ translation_history = []
 history_listbox = None
 
 
-# Function to handle the translation process based on the selected translator
 def change(text, src="english", dest="marathi", translator_choice="MyMemory"):
+    """
+    Handles the translation process based on the selected translator.
+
+    Args:
+    text (str): The text to be translated
+    src (str): The source language
+    dest (str): The destination language
+    translator_choice (str): The chosen translation service
+
+    Returns:
+    str: The translated text
+    """
     try:
         if translator_choice == "Google (googletrans)":
             translator = GoogleTranslator()
@@ -41,8 +54,11 @@ def change(text, src="english", dest="marathi", translator_choice="MyMemory"):
         return ""
 
 
-# Function to handle the translation button click event
 def data():
+    """
+    Handles the translation button click event.
+    Retrieves input, performs translation, and updates the UI.
+    """
     s = combo_txt.get()  # Get the source language
     d = dest_combo.get()  # Get the destination language
     masg = sor_txt.get(1.0, END).strip()  # Get the text to be translated
@@ -72,8 +88,10 @@ def data():
         update_history_listbox()
 
 
-# Function to swap the source and destination languages
 def swap_languages():
+    """
+    Swaps the source and destination languages and their corresponding texts.
+    """
     src = combo_txt.get()
     dest = dest_combo.get()
     combo_txt.set(dest)
@@ -88,21 +106,27 @@ def swap_languages():
     resul_txt.insert(END, src_text)
 
 
-# Function to clear the text from both the source and result Text widgets
 def clear_text():
+    """
+    Clears the text from both the source and result Text widgets.
+    """
     sor_txt.delete(1.0, END)
     resul_txt.delete(1.0, END)
 
 
-# Function to copy the translated text to the clipboard
 def copy_text():
+    """
+    Copies the translated text to the clipboard.
+    """
     text_to_copy = resul_txt.get(1.0, END).strip()
     pyperclip.copy(text_to_copy)
     messagebox.showinfo("Copied", "Translated text copied to clipboard!")
 
 
-# Function to update the Listbox that displays the translation history
 def update_history_listbox():
+    """
+    Updates the Listbox that displays the translation history.
+    """
     # Check if the history_listbox widget exists before trying to update it
     if history_listbox and history_listbox.winfo_exists():
         history_listbox.delete(0, END)  # Clear the Listbox
@@ -111,8 +135,10 @@ def update_history_listbox():
             history_listbox.insert(END, f"{i}. {item['original'][:30]}... -> {item['translated'][:30]}...")
 
 
-# Function to display the translation history in a new window
 def show_history():
+    """
+    Displays the translation history in a new window.
+    """
     global history_listbox
     history_window = Toplevel(box)
     history_window.title("Translation History")
@@ -136,8 +162,10 @@ def show_history():
     # Populate the Listbox with the current translation history
     update_history_listbox()
 
-    # Function to load a selected translation from history into the main window
     def load_selected_translation():
+        """
+        Loads a selected translation from history into the main window.
+        """
         selection = history_listbox.curselection()
         if selection:
             index = selection[0]
@@ -156,9 +184,28 @@ def show_history():
     load_button.pack(pady=10)
 
 
+def speech_to_text():
+    """
+    Converts speech to text using Google's speech recognition API.
+    """
+    r = sr.Recognizer()
+    with sr.Microphone() as source:
+        messagebox.showinfo("Speech Recognition", "Speak now...")
+        audio = r.listen(source)
+
+    try:
+        text = r.recognize_google(audio)
+        sor_txt.delete(1.0, END)
+        sor_txt.insert(END, text)
+    except sr.UnknownValueError:
+        messagebox.showerror("Speech Recognition", "Could not understand audio")
+    except sr.RequestError as e:
+        messagebox.showerror("Speech Recognition", f"Could not request results; {e}")
+
+
 # Tkinter GUI setup
 box = Tk()
-box.geometry('500x850')
+box.geometry('500x900')  # Increased height to accommodate new button
 box.title('Multi-Translator')
 box.config(bg='black')
 
@@ -178,26 +225,30 @@ lab_txt.place(x=100, y=80, width=300, height=20)
 sor_txt = Text(frame, font="Helvetica 12", wrap=WORD)
 sor_txt.place(x=10, y=110, width=480, height=100)
 
+# Button for speech-to-text
+speech_button = Button(frame, text='Speech to Text', relief=RAISED, command=speech_to_text, bg='cyan', fg='black')
+speech_button.place(x=10, y=220, width=150, height=40)
+
 # List of available languages for translation
 list_text = list(LANGUAGES.values())
 
 # Combobox to select the source language
 combo_txt = ttk.Combobox(frame, values=list_text)
-combo_txt.place(x=10, y=220, width=150, height=40)
+combo_txt.place(x=10, y=270, width=150, height=40)
 combo_txt.set("english")  # Default source language
 
 # Button to trigger the translation
 button = Button(frame, text='Translate', relief=RAISED, command=data, bg='blue', fg='white')
-button.place(x=170, y=220, width=100, height=40)
+button.place(x=170, y=270, width=100, height=40)
 
 # Combobox to select the destination language
 dest_combo = ttk.Combobox(frame, values=list_text)
-dest_combo.place(x=280, y=220, width=150, height=40)
+dest_combo.place(x=280, y=270, width=150, height=40)
 dest_combo.set("marathi")  # Default destination language
 
 # Button to swap the source and destination languages
 swap_button = Button(frame, text='⇄', relief=RAISED, command=swap_languages, bg='green', fg='white')
-swap_button.place(x=440, y=220, width=50, height=40)
+swap_button.place(x=440, y=270, width=50, height=40)
 
 # Combobox to select the translator (set MyMemory as default)
 translator_var = StringVar()
@@ -211,27 +262,31 @@ translator_choices = [
     "MyMemory"
 ]
 translator_menu = ttk.Combobox(frame, textvariable=translator_var, values=translator_choices)
-translator_menu.place(x=10, y=270, width=200, height=40)
+translator_menu.place(x=10, y=320, width=200, height=40)
 
 # Label for the translated text section
 lab_txt = Label(frame, text='Translated Text', font="Helvetica 15 bold", fg='white', bg='black')
-lab_txt.place(x=100, y=320, width=300, height=20)
+lab_txt.place(x=100, y=370, width=300, height=20)
 
 # Text widget to display the translated text
 resul_txt = Text(frame, font="Helvetica 12", wrap=WORD)
-resul_txt.place(x=10, y=350, width=480, height=150)
+resul_txt.place(x=10, y=400, width=480, height=100)
 
-# Button to clear both the source and translated text
-clear_button = Button(frame, text='Clear', relief=RAISED, command=clear_text, bg='red', fg='white')
+# Button to clear the text
+clear_button = Button(frame, text='Clear Text', relief=RAISED, command=clear_text, bg='orange', fg='white')
 clear_button.place(x=10, y=510, width=100, height=40)
 
-# Button to copy the translated text to the clipboard
-copy_button = Button(frame, text='Copy', relief=RAISED, command=copy_text, bg='orange', fg='white')
+# Button to copy the translated text
+copy_button = Button(frame, text='Copy Text', relief=RAISED, command=copy_text, bg='purple', fg='white')
 copy_button.place(x=120, y=510, width=100, height=40)
 
 # Button to show the translation history
-history_button = Button(frame, text='History', relief=RAISED, command=show_history, bg='purple', fg='white')
+history_button = Button(frame, text='History', relief=RAISED, command=show_history, bg='brown', fg='white')
 history_button.place(x=230, y=510, width=100, height=40)
+
+# Button to exit the application
+exit_button = Button(frame, text='Exit', relief=RAISED, command=box.quit, bg='red', fg='white')
+exit_button.place(x=340, y=510, width=100, height=40)
 
 # Start the Tkinter event loop
 box.mainloop()
