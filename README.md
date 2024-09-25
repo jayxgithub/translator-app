@@ -58,10 +58,6 @@ Note: We're using a specific version of `googletrans` (3.1.0a0) as newer version
 
 Contributions to Multi-Translator are welcome! Please feel free to submit a Pull Request.
 
-## License
-
-This project is open source and available under the [MIT License](LICENSE).
-
 ## Disclaimer
 
 This application uses various third-party translation services. Please be aware of and comply with the terms of service for each translation API you use.
